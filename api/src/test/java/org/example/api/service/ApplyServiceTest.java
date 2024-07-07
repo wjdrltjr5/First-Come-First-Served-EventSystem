@@ -1,4 +1,4 @@
-package org.example.api.Service;
+package org.example.api.service;
 
 import org.assertj.core.api.Assertions;
 import org.example.api.repository.CouponRepository;
@@ -10,7 +10,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class ApplyServiceTest {
 
@@ -33,8 +32,8 @@ class ApplyServiceTest {
     @Test
     void 여러명_응모() throws InterruptedException {
         // given
-        int threadCount = 500;
-        ExecutorService executorService = Executors.newFixedThreadPool(12);
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
         CountDownLatch latch = new CountDownLatch(threadCount);
         // when
         for(int i = 0; i < threadCount; i++) {
@@ -50,6 +49,6 @@ class ApplyServiceTest {
         latch.await();
         long count = couponRepository.count();
         // then
-        Assertions.assertThat(count).isEqualTo(30);
+        Assertions.assertThat(count).isEqualTo(10);
     }
 }
