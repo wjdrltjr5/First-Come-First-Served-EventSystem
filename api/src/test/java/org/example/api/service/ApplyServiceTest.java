@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.example.api.repository.CouponRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +29,7 @@ class ApplyServiceTest {
     @AfterEach
     void redisClear(){
         redisTemplate.delete("coupon_count");
+        redisTemplate.delete("applied_user");
     }
 
     @Test
@@ -61,5 +63,28 @@ class ApplyServiceTest {
         long count = couponRepository.count();
         // then
         Assertions.assertThat(count).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("같은 사람이 쿠폰을 발급 신청을해도 하나만 발급")
+    void appy() throws InterruptedException {
+        // given
+        int threadCount = 1000;
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        // when
+        for(int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                try{
+                    applyService.apply(1L);
+                }finally {
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await();
+        long count = couponRepository.count();
+        // then
+        Assertions.assertThat(count).isEqualTo(1);
     }
 }
